@@ -2,23 +2,31 @@ name: Tests with Allure Report
 
 on: [push, pull_request]
 
+permissions:
+  pull-requests: write
+  checks: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checkout code
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # 2. Setup your language/runtime
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9.7'
 
+    # 3. Install dependencies
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
 
+    # 4. Run tests (must use Allure reporter)
     - name: Run tests
       run: |
         pytest --alluredir=allure-results
