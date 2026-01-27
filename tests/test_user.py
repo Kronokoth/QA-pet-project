@@ -1,5 +1,6 @@
 import allure
 import pytest
+
 from services.user.user_api import UserAPI
 @allure.epic("Administration")
 @allure.feature("Users")
