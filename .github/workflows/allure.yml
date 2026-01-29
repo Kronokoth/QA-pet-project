@@ -6,23 +6,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.14.2'
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt allure-pytest
+
       - name: Run tests with Allure
         run: |
           pytest --alluredir=allure-results
         continue-on-error: true
+
       - name: Download previous Allure results (History)
         uses: actions/download-artifact@v4
         with:
           name: allure-history
           path: allure-history
+          run-id: ${{ github.run_id - 1 }}
         continue-on-error: true
 
       - name: Generate Allure report
