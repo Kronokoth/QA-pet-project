@@ -24,7 +24,7 @@ jobs:
           name: allure-history
           path: allure-history
         continue-on-error: true
-      # ========== ИСПРАВЛЕННЫЙ ШАГ ==========
+
       - name: Generate Allure report
         run: |
           npm install -g allure-commandline
@@ -35,7 +35,7 @@ jobs:
           else
             echo "No previous history found. First run."
           fi
-      # ========== ДОБАВЛЕНА ПРОВЕРКА ==========
+
       - name: Upload Allure history for next run
         if: success()
         uses: actions/upload-artifact@v4
