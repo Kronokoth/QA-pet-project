@@ -28,8 +28,8 @@ jobs:
         with:
           name: allure-history
           path: allure-history
-          # Используем математическое выражение для получения ID предыдущего запуска
-          run-id: ${{ github.run_id - 1 }}
+          # Ключевое исправление: вычисляем предыдущий run_id через format
+          run-id: ${{ format('{0}', github.run_id - 1) }}
         continue-on-error: true
 
       - name: Generate Allure report
