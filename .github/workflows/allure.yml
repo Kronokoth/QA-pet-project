@@ -35,7 +35,7 @@ jobs:
           else
             echo "No previous history found. First run."
           fi
-
+      # Дебаг - временный инструмент
       - name: Debug - Check history folder
         run: |
           echo "Checking if history folder exists and its contents:"
