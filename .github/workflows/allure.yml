@@ -22,6 +22,13 @@ jobs:
           pytest --alluredir=allure-results
         continue-on-error: true
 
+      """- name: Download previous Allure results (History)
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-history
+          path: allure-history
+        continue-on-error: true"""
+
       - name: Download previous Allure results (History)
         uses: actions/download-artifact@v4
         with:
