@@ -22,25 +22,38 @@ jobs:
           pytest --alluredir=allure-results
         continue-on-error: true
 
-      # Шаг для загрузки истории из ПРЕДЫДУЩЕГО выполнения
+      # 1. Устанавливаем GitHub CLI
+      - name: Install GitHub CLI
+        run: |
+          type -p curl >/dev/null || sudo apt install curl -y
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh -y
+
+      # 2. Скачиваем артефакт 'allure-history' из ПРЕДЫДУЩЕГО выполнения
       - name: Download previous Allure results (History)
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-history
-          path: allure-history
-          # Ключевое исправление: вычисляем предыдущий run_id через format
-          run-id: ${{ format('{0}', github.run_id - 1) }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREVIOUS_RUN_ID: ${{ github.run_id }}
+        run: |
+          # Вычисляем ID предыдущего запуска
+          PREV=$(($PREVIOUS_RUN_ID - 1))
+          echo "Attempting to download artifact 'allure-history' from previous run ID: $PREV"
+          # Команда скачивает артефакт, если он существует
+          gh run download $PREV --name allure-history --dir allure-history 2>/dev/null || echo "Artifact 'allure-history' not found in run $PREV (this is OK for the first runs)."
         continue-on-error: true
 
       - name: Generate Allure report
         run: |
           npm install -g allure-commandline
           allure generate allure-results --clean -o allure-report
-          if [ -d allure-history ] && [ "$(ls -A allure-history)" ]; then
-            echo "Copying existing history..."
+          # Копируем историю, если она была скачана
+          if [ -d allure-history ] && [ "$(ls -A allure-history 2>/dev/null)" ]; then
+            echo "Copying existing history into the new report..."
             cp -r allure-history/. allure-report/history/
           else
-            echo "No previous history found. First run."
+            echo "No previous history found. Starting fresh."
           fi
 
       - name: Upload Allure history for next run
@@ -50,7 +63,6 @@ jobs:
           name: allure-history
           path: allure-report/history
           retention-days: 30
-        continue-on-error: true
 
       - name: Upload Allure report as artifact
         uses: actions/upload-artifact@v4
