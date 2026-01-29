@@ -36,6 +36,13 @@ jobs:
             echo "No previous history found. First run."
           fi
 
+      - name: Debug - Check history folder
+        run: |
+          echo "Checking if history folder exists and its contents:"
+          ls -la allure-report/ 2>/dev/null || echo "Folder allure-report/ not found"
+          echo "---"
+          ls -la allure-report/history/ 2>/dev/null || echo "Folder allure-report/history/ not found"
+
       - name: Upload Allure history for next run
         if: success()
         uses: actions/upload-artifact@v4
