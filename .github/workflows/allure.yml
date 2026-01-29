@@ -24,7 +24,7 @@ jobs:
           pytest --alluredir=allure-results
         continue-on-error: true
 
-      # Используем v4 вместо v3
+
       - name: Download previous Allure results (History)
         uses: actions/download-artifact@v4
         with:
@@ -39,7 +39,7 @@ jobs:
           allure generate allure-results --clean -o allure-report
           cp -r allure-history/. allure-report/history || true
 
-      # Используем v4 вместо v3
+
       - name: Upload Allure history for next run
         uses: actions/upload-artifact@v4
         with:
@@ -47,7 +47,7 @@ jobs:
           path: allure-report/history
           retention-days: 30
 
-      # Используем v4 вместо v3
+
       - name: Upload Allure report as artifact
         uses: actions/upload-artifact@v4
         with:
