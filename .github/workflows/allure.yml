@@ -22,18 +22,13 @@ jobs:
           pytest --alluredir=allure-results
         continue-on-error: true
 
-      """- name: Download previous Allure results (History)
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-history
-          path: allure-history
-        continue-on-error: true"""
-
+      # Шаг для загрузки истории из ПРЕДЫДУЩЕГО выполнения
       - name: Download previous Allure results (History)
         uses: actions/download-artifact@v4
         with:
           name: allure-history
           path: allure-history
+          # Используем математическое выражение для получения ID предыдущего запуска
           run-id: ${{ github.run_id - 1 }}
         continue-on-error: true
 
@@ -47,13 +42,6 @@ jobs:
           else
             echo "No previous history found. First run."
           fi
-      # Дебаг - временный инструмент
-      - name: Debug - Check history folder
-        run: |
-          echo "Checking if history folder exists and its contents:"
-          ls -la allure-report/ 2>/dev/null || echo "Folder allure-report/ not found"
-          echo "---"
-          ls -la allure-report/history/ 2>/dev/null || echo "Folder allure-report/history/ not found"
 
       - name: Upload Allure history for next run
         if: success()
@@ -63,6 +51,7 @@ jobs:
           path: allure-report/history
           retention-days: 30
         continue-on-error: true
+
       - name: Upload Allure report as artifact
         uses: actions/upload-artifact@v4
         with:
