@@ -45,21 +45,17 @@ jobs:
 
       - name: Generate Allure report
         run: |
-          # Устанавливаем Allure через npm (без флага --history-dir)
-          npm install -g allure-commandline
-          
-          # Генерируем отчёт
-          allure generate allure-results --clean -o allure-report
-          
-          # Вручную копируем историю, если она была скачана
-          if [ -d allure-history ] && [ "$(ls -A allure-history 2>/dev/null)" ]; then
-            echo "Manually copying history into the new report..."
-            cp -r allure-history/. allure-report/history/
-            echo "History merged manually."
-          else
-            echo "No previous history found. Starting fresh."
-          fi
-          echo "Report generated."
+          mkdir -p allure-history allure-report
+        
+          # Используем официальный образ из GitHub Container Registry
+          docker run --rm \
+            -v $(pwd)/allure-results:/allure-results \
+            -v $(pwd)/allure-history:/allure-history \
+            -v $(pwd)/allure-report:/allure-report \
+            ghcr.io/allure-framework/allure2:latest \
+            generate --clean /allure-results --output /allure-report --history-dir /allure-history
+        
+          echo "Allure report generated with history via Docker."
 
       - name: Upload Allure history for next run
         if: success()
