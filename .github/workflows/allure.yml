@@ -78,3 +78,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
           publish_branch: gh-pages
+          # полностью очищает историю ветки
+          force_orphan: true
