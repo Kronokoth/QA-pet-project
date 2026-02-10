@@ -59,8 +59,10 @@ jobs:
 
       - name: Generate Allure report
         run: |
-          sudo apt update
-          sudo apt install -y allure
+          wget https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+          tar -xzf allure-2.27.0.tgz -C /opt/
+          ln -sf /opt/allure-2.27.0/bin/allure /usr/local/bin/allure
+          allure --version
           # Генерируем отчёт с объединением истории
           allure generate allure-results --clean -o allure-report --history-dir allure-history
           echo "Report generated with merged history.""
