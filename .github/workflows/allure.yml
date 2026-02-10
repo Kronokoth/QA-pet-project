@@ -37,10 +37,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PREVIOUS_RUN_ID: ${{ github.run_id }}
         run: |
-      # Вычисляем ID предыдущего запуска
+         # Вычисляем ID предыдущего запуска
           PREV=$(($PREVIOUS_RUN_ID - 1))
           echo "Attempting to download artifact 'allure-history' from previous run ID: $PREV"
-      # Команда скачивает артефакт, если он существует (добавлено т.к. Github Actions не видел предыдущие результаты (артефакты)
+         # Команда скачивает артефакт, если он существует (добавлено т.к. Github Actions не видел предыдущие результаты (артефакты)
           gh run download $PREV --name allure-history --dir allure-history 2>/dev/null || echo "Artifact 'allure-history' not found in run $PREV (this is OK for the first runs)."
         continue-on-error: true
 
