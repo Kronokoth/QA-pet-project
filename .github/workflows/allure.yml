@@ -40,29 +40,15 @@ jobs:
             mkdir -p allure-history
             cp -r gh-pages-temp/history/* allure-history/
           else
-            echo "No existing history found in gh-pages (first run or history missing)."
-          fi
-
-      # Проверка содержимого файлов истории
-      - name: Debug - Check history files content
-        run: |
-          echo "=== Checking history files structure ==="
-          if [ -d "allure-history" ]; then
-            for file in allure-history/*.json; do
-              echo "--- File: $(basename $file) ---"
-              cat "$file" 2>/dev/null || echo " (empty or cannot read)"
-              echo ""
-            done
-          else
-            echo "Directory 'allure-history' not found."
+            echo "No previous history found in gh-pages (first run or history missing)."
           fi
 
       - name: Generate Allure report
         run: |
-        # Проверяем, что папки существуют
+          # Проверяем, что папки существуют
           mkdir -p allure-history allure-report
         
-        # Генерируем отчёт через Docker
+          # Генерируем отчёт через Docker
           docker run --rm \
             -v $(pwd)/allure-results:/allure-results \
             -v $(pwd)/allure-history:/allure-history \
