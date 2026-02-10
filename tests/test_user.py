@@ -10,7 +10,7 @@ class TestUsers:
     @allure.title("Create new user")
     # test
     def test_create_user(self):
-        self.user_api = UserAPI()
+        self.user_ap = UserAPI()
         return_user = self.user_api.create_user()
         username = return_user[1]['username']
         self.user_api.get_user_by_username(username)
