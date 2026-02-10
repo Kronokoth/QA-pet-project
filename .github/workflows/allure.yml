@@ -60,8 +60,8 @@ jobs:
       - name: Generate Allure report
         run: |
           npm install -g allure-commandline
-          # Генерируем отчёт, объединяя с существующей историей
-          allure generate allure-results --clean -o allure-report --history-dir allure-history
+          # Используем абсолютный путь к папке с историей
+          allure generate allure-results --clean -o allure-report --history-dir $(pwd)/allure-history --verbose
           echo "Report generated with merged history."
 
       - name: Upload Allure history for next run
@@ -86,4 +86,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
           publish_branch: gh-pages
-          # force_orphan: true # полностью очищает историю ветки
