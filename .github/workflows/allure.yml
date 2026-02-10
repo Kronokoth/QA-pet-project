@@ -60,14 +60,9 @@ jobs:
       - name: Generate Allure report
         run: |
           npm install -g allure-commandline
-          allure generate allure-results --clean -o allure-report
-          # Копируем историю, если она была скачана
-          if [ -d allure-history ] && [ "$(ls -A allure-history 2>/dev/null)" ]; then
-            echo "Copying existing history into the new report..."
-            cp -r allure-history/. allure-report/history/
-          else
-            echo "No previous history found. Starting fresh."
-          fi
+          # Генерируем отчёт, объединяя с существующей историей
+          allure generate allure-results --clean -o allure-report --history-dir allure-history
+          echo "Report generated with merged history."
 
       - name: Upload Allure history for next run
         if: success()
