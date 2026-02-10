@@ -4,14 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Headers:
-    API_KEY = os.getenv('GITHUB_API_KEY')
+    PET_STORE_API_KEY = os.getenv('PET_STORE_API_KEY')
 
-    def pet_store_headers(self):
-        return {
-            "api_key": self.API_KEY,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
-
-    def api_key_headers(self):
-        return {"api_key": self.API_KEY}
+    def pet_store_api_key_headers(self):
+        return {"api_key": self.PET_STORE_API_KEY}
