@@ -47,13 +47,12 @@ jobs:
         run: |
           mkdir -p allure-history allure-report
         
-          # Используем официальный образ из GitHub Container Registry
           docker run --rm \
             -v $(pwd)/allure-results:/allure-results \
             -v $(pwd)/allure-history:/allure-history \
             -v $(pwd)/allure-report:/allure-report \
-            ghcr.io/allure-framework/allure2:latest \
-            generate --clean /allure-results --output /allure-report --history-dir /allure-history
+            frankescobar/allure-docker-service \
+            allure generate --clean /allure-results --output /allure-report --history-dir /allure-history
         
           echo "Allure report generated with history via Docker."
 
