@@ -79,4 +79,4 @@ jobs:
           publish_dir: ./allure-report
           publish_branch: gh-pages
           # полностью очищает историю ветки
-          force_orphan: true
+          #force_orphan: true
