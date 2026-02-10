@@ -43,6 +43,9 @@ jobs:
             echo "No previous history found in gh-pages (first run or history missing)."
           fi
 
+      - name: Check Docker availability
+        run: docker --version
+
       - name: Generate Allure report
         run: |
           # Проверяем, что папки существуют
