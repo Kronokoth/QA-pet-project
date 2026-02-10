@@ -22,7 +22,6 @@ jobs:
           pytest --alluredir=allure-results
         continue-on-error: true
 
-      # 1. Устанавливаем GitHub CLI
       - name: Install GitHub CLI
         run: |
           type -p curl >/dev/null || sudo apt install curl -y
@@ -31,7 +30,7 @@ jobs:
           sudo apt update
           sudo apt install gh -y
 
-      # 2. Скачиваем артефакт 'allure-history' из ПРЕДЫДУЩЕГО выполнения
+      #  Скачиваем артефакт 'allure-history' из ПРЕДЫДУЩЕГО выполнения
       - name: Download previous Allure results (History)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -43,6 +42,19 @@ jobs:
          # Команда скачивает артефакт, если он существует (добавлено т.к. Github Actions не видел предыдущие результаты (артефакты)
           gh run download $PREV --name allure-history --dir allure-history 2>/dev/null || echo "Artifact 'allure-history' not found in run $PREV (this is OK for the first runs)."
         continue-on-error: true
+
+      # Скачиваем историю из уже опубликованного сайта (ветка gh-pages)
+      - name: Download previous history from gh-pages
+        continue-on-error: true
+        run: |
+          git clone --depth 1 --branch gh-pages https://github.com/${{ github.repository }}.git gh-pages-temp 2>/dev/null || true
+          if [ -d "gh-pages-temp/history" ]; then
+            echo "Found existing history in gh-pages branch."
+            mkdir -p allure-history
+            cp -r gh-pages-temp/history/* allure-history/
+          else
+            echo "No existing history found in gh-pages (first run or history missing)."
+          fi
 
       - name: Generate Allure report
         run: |
@@ -78,5 +90,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
           publish_branch: gh-pages
-          # полностью очищает историю ветки
-          #force_orphan: true
+          # force_orphan: true # полностью очищает историю ветки
