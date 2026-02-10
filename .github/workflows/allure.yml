@@ -59,12 +59,18 @@ jobs:
 
       - name: Generate Allure report
         run: |
-          curl -Lo allure.sh https://raw.githubusercontent.com/allure-framework/allure2/master/allure-install.sh
-          bash allure.sh --version 2.27.0  # Используем проверенную версию 2.27.0
-          allure --version
-          # Генерируем отчёт с объединением истории
-          allure generate allure-results --clean -o allure-report --history-dir allure-history
-          echo "Report generated with merged history."
+        # Проверяем, что папки существуют
+          mkdir -p allure-history allure-report
+        
+        # Генерируем отчёт через Docker
+          docker run --rm \
+            -v $(pwd)/allure-results:/allure-results \
+            -v $(pwd)/allure-history:/allure-history \
+            -v $(pwd)/allure-report:/allure-report \
+            allure/allure:latest \
+            generate --clean /allure-results --output /allure-report --history-dir /allure-history
+        
+          echo "Allure report generated with history via Docker."
 
       - name: Upload Allure history for next run
         if: success()
