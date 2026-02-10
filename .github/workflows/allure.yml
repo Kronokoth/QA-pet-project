@@ -59,10 +59,11 @@ jobs:
 
       - name: Generate Allure report
         run: |
-          npm install -g allure-commandline
-          # Используем абсолютный путь к папке с историей
-          allure generate allure-results --clean -o allure-report --history-dir $(pwd)/allure-history --verbose
-          echo "Report generated with merged history."
+          sudo apt update
+          sudo apt install -y allure
+          # Генерируем отчёт с объединением истории
+          allure generate allure-results --clean -o allure-report --history-dir allure-history
+          echo "Report generated with merged history.""
 
       - name: Upload Allure history for next run
         if: success()
