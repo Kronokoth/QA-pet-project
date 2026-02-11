@@ -28,10 +28,10 @@ jobs:
 
       - name: Run API tests with pytest and generate Allure results  # Запуск тестов
         run: |
-          pytest -m regression --alluredir=allure-results --numprocesses 2
-          # Запускаем тесты с меткой "regression"
+          pytest -v -s --alluredir allure-results
+          # Запускаем тесты 
           # --alluredir=allure-results сохраняет результаты в папку allure-results
-          # --numprocesses 2 - выполняем тесты в 2 потока (ускоряет выполнение)
+          
 
       - name: Upload Allure results  # Загружаем результаты тестов в GitHub Actions
         if: always()  # Загружаем файлы независимо от успеха/неуспеха тестов
