@@ -1,2 +1,2 @@
 "Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Wed Feb 11 07:29:36 UTC 2026","Wed Feb 11 07:29:37 UTC 2026","768","tests","test_user","TestUsers","","","Create new user",""
+"passed","Wed Feb 11 11:06:02 UTC 2026","Wed Feb 11 11:06:03 UTC 2026","919","tests","test_user","TestUsers","","","Create new user",""
