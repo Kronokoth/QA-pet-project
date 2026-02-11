@@ -4,4 +4,3 @@
 
 Ссылка на отчет https://kronokoth.github.io/QA-pet-project/
 
-test

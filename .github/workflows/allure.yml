@@ -54,8 +54,9 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
         publish_dir: ./allure-report
-        keep_files: false  # Удаляем старые файлы
-        force_orphan: true  # Создаем новую историю
+        keep_files: true
+        #keep_files: false  # Удаляем старые файлы
+        #force_orphan: true  # Создаем новую историю
 
     - name: Upload test results as artifact
       uses: actions/upload-artifact@v4
