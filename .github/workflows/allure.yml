@@ -43,7 +43,7 @@ jobs:
             echo "No previous history found in gh-pages (first run or history missing)."
           fi
 
-      - name: Generate Allure report
+      - name: Generate Allure report # Проверить наличие новых файлов в all-res при пуше
         run: |
           # Устанавливаем Allure через npm (без флага --history-dir)
           npm install -g allure-commandline
