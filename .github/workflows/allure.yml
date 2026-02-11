@@ -1,50 +1,68 @@
-name: Python Allure Report
+name: Python Tests with Allure Report
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  test-and-publish:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.14.2'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.14.2'
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-  
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Устанавливаем необходимые для Allure пакеты
+        pip install pytest allure-pytest pytest-html
 
-      - name: Run tests
-        run: pytest --alluredir=allure-results
+    - name: Run tests with Allure
+      run: |
+        # Запускаем тесты и генерируем Allure результаты
+        pytest --alluredir=./allure-results
 
-      - name: Get Allure history
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+    - name: Install Allure CLI
+      run: |
+        # Устанавливаем Allure командной строки
+        sudo apt-get update
+        sudo apt-get install -y default-jre
+        wget https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
+        tar -zxvf allure-2.24.0.tgz
+        sudo mv allure-2.24.0 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
-      - name: Allure Report action
-        uses: simple-elf/allure-report-action@v1.7
-        if: always()
-        with:
-          allure_results: allure-results
-          allure_report: allure-report
-          allure_history: allure-history
+    - name: Generate Allure Report
+      run: |
+        # Генерируем HTML отчет
+        allure generate ./allure-results -o ./allure-report --clean
 
-      - name: Deploy report to Github Pages
-        if: always() && github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-report
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: ./allure-report
+        keep_files: false  # Удаляем старые файлы
+        force_orphan: true  # Создаем новую историю
+
+    - name: Upload test results as artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results
+        path: |
+          allure-results/
+          allure-report/
+        retention-days: 7
