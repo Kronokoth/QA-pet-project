@@ -3,6 +3,8 @@ name: Python Tests with Allure Report
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -20,34 +22,85 @@ jobs:
 
     - name: Install dependencies
       run: |
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest allure-pytest
+        # Устанавливаем необходимые для Allure пакеты
+        pip install pytest allure-pytest pytest-html
 
-    - name: Run tests
+    - name: Run tests with Allure
       run: |
-        pytest --alluredir=allure-results
+        # Запускаем тесты и генерируем Allure результаты
+        pytest --alluredir=./allure-results
 
-    - name: Load test report history
-      uses: actions/checkout@v4
-      if: always()
-      continue-on-error: true
-      with:
-        ref: gh-pages
-        path: gh-pages
+    - name: Install Allure CLI
+      run: |
+        # Устанавливаем Allure командной строки
+        sudo apt-get update
+        sudo apt-get install -y default-jre
+        wget https://github.com/allure-framework/allure2/releases/download/2.24.0/allure-2.24.0.tgz
+        tar -zxvf allure-2.24.0.tgz
+        sudo mv allure-2.24.0 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/bin/allure
 
-    - name: Build test report
-      uses: simple-elf/allure-report-action@v1.7
-      if: always()
-      with:
-        gh_pages: gh-pages
-        allure_history: allure-history
-        allure_results: allure-results
+    - name: Get Allure history
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      run: |
+        # Создаем временную папку
+        mkdir -p ./allure-history
+        
+        # Клонируем только ветку gh-pages для получения истории
+        git clone -b gh-pages --single-branch --depth 1 https://github.com/${{ github.repository }}.git ./gh-pages-repo || echo "No gh-pages branch yet"
+        
+        # Если репозиторий склонировался успешно, копируем историю
+        if [ -d "./gh-pages-repo/history" ]; then
+          cp -r ./gh-pages-repo/history ./allure-history/
+          echo "History copied from gh-pages"
+        else
+          echo "No history found"
+        fi
+        
+        # Очищаем временные файлы
+        rm -rf ./gh-pages-repo
 
-    - name: Publish test report
+    - name: Generate Allure Report with history
+      run: |
+        # Копируем историю в allure-results для отображения трендов
+        if [ -d "./allure-history/history" ]; then
+          cp -r ./allure-history/history ./allure-results/
+          echo "History added to allure-results"
+        fi
+        
+        # Генерируем HTML отчет с историей
+        allure generate ./allure-results -o ./allure-report --clean
+
+    - name: Update Allure history
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      run: |
+        # Сохраняем историю из нового отчета для будущих запусков
+        mkdir -p ./allure-history
+        
+        if [ -d "./allure-report/history" ]; then
+          cp -r ./allure-report/history ./allure-history/
+          echo "History updated for next run"
+        fi
+
+    - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
-        publish_dir: allure-history
-        keep_files: true  # КРИТИЧЕСКИ ВАЖНО: сохраняем историю
+        publish_dir: ./allure-report
+        keep_files: true
+        # Важно: keep_files: true сохраняет старые отчеты и историю
+        # force_orphan: false  # Не создаем новую историю (по умолчанию false)
+
+    - name: Upload test results as artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results-${{ github.run_number }}
+        path: |
+          allure-results/
+          allure-report/
+        retention-days: 7
