@@ -1,77 +1,74 @@
-name: Tests with Allure Report
-on: [push, pull_request]
+name: API tests  # Название workflow
+
+on:
+  push:
+    branches:
+      - main  # Запускать workflow при пуше в main
+  pull_request:
+    branches:
+      - main  # Запускать workflow при открытии PR в main
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  run-tests:  # Джоба для запуска тестов
+    runs-on: ubuntu-latest  # Используем последнюю версию Ubuntu
+
     steps:
-      - name: Checkout repository
+      - name: Check out repository  # Клонирование кода репозитория в среду CI/CD
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Set up Python  # Установка Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.14.2'
+          python-version: '3.14.2'  # Используем Python версии 3.12
 
-      - name: Install dependencies
+      - name: Install dependencies  # Установка зависимостей проекта
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt allure-pytest
+          python -m pip install --upgrade pip  # Обновляем pip до последней версии
+          pip install -r requirements.txt  # Устанавливаем зависимости, указанные в requirements.txt
 
-      - name: Run tests with Allure
+      - name: Run API tests with pytest and generate Allure results  # Запуск тестов
         run: |
-          pytest --alluredir=allure-results
-        continue-on-error: true
+          pytest -m regression --alluredir=allure-results --numprocesses 2
+          # Запускаем тесты с меткой "regression"
+          # --alluredir=allure-results сохраняет результаты в папку allure-results
+          # --numprocesses 2 - выполняем тесты в 2 потока (ускоряет выполнение)
 
-      - name: Install GitHub CLI
-        run: |
-          type -p curl >/dev/null || sudo apt install curl -y
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh -y
-
-      # Скачиваем историю из уже опубликованного сайта (ветка gh-pages)
-      - name: Download previous history from gh-pages
-        continue-on-error: true
-        run: |
-          git clone --depth 1 --branch gh-pages https://github.com/${{ github.repository }}.git gh-pages-temp 2>/dev/null || true
-          if [ -d "gh-pages-temp/history" ]; then
-            echo "Found existing history in gh-pages branch."
-            mkdir -p allure-history
-            cp -r gh-pages-temp/history/* allure-history/
-          else
-            echo "No previous history found in gh-pages (first run or history missing)."
-          fi
-
-      - name: Generate Allure report # Проверить наличие новых файлов в all-res при пуше
-        run: |
-          # Устанавливаем Allure через npm (без флага --history-dir)
-          npm install -g allure-commandline
-          
-          # Генерируем отчёт
-          allure generate allure-results --clean -o allure-report
-          
-          # Вручную копируем историю, если она была скачана
-          if [ -d allure-history ] && [ "$(ls -A allure-history 2>/dev/null)" ]; then
-            echo "Manually copying history into the new report..."
-            cp -r allure-history/. allure-report/history/
-            echo "History merged manually."
-          else
-            echo "No previous history found. Starting fresh."
-          fi
-          echo "Report generated."
-
-      - name: Upload Allure report as artifact
+      - name: Upload Allure results  # Загружаем результаты тестов в GitHub Actions
+        if: always()  # Загружаем файлы независимо от успеха/неуспеха тестов
         uses: actions/upload-artifact@v4
         with:
-          name: allure-report
-          path: allure-report
-          retention-days: 30
+          name: allure-results  # Название артефакта
+          path: allure-results  # Путь к файлам отчета
 
-      - name: Deploy Allure report to GitHub Pages
-        if: success()
+  publish-report:  # Джоба для публикации Allure-отчета на GitHub Pages
+    if: always()  # Джоба будет выполнена вне зависимости от успеха или неуспеха run-tests
+    needs: [ run-tests ]  # Выполняется только после успешного выполнения run-tests
+    runs-on: ubuntu-latest  # Используем последнюю версию Ubuntu
+
+    steps:
+      - name: Check out repository  # Клонируем репозиторий, включая ветку gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages  # Операции будем выполнять в ветке gh-pages
+          path: gh-pages  # Клонируем файлы в папку gh-pages
+
+      - name: Download Allure results  # Загружаем ранее сохраненные результаты тестов
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results  # Название артефакта
+          path: allure-results  # Путь для скачивания
+
+      - name: Allure Report action from marketplace  # Генерация отчета Allure
+        uses: simple-elf/allure-report-action@v1.12
+        if: always()
+        with:
+          allure_results: allure-results  # Папка с результатами тестов
+          allure_history: allure-history  # Папка для хранения истории отчетов
+
+      - name: Deploy report to Github Pages  # Публикация отчета на GitHub Pages
+        if: always()
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./allure-report
-          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Токен для доступа к репозиторию
+          publish_branch: gh-pages  # Публикуем отчет в ветку gh-pages
+          publish_dir: allure-history  # Папка, где находится сгенерированный отчет
